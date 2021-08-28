@@ -31,6 +31,10 @@ canvas.addEventListener('mouseup', function(){
 })
 
 // Player Creation
+const playerLeft = new Image();
+playerLeft.src = 'resources/spritesheets/__blue_cartoon_fish_swim.png';
+playerRight = new Image();
+playerRight.src = 'resources/spritesheets/__blue_cartoon_fish_idle.png'
 class Player {
   constructor(){
     this.x = canvas.width/2;
@@ -76,13 +80,18 @@ const bubblesArray = [];
 class Bubble {
   constructor(){
     this.x = Math.random() * canvas.width;
-    this.y = Math.random() * canvas.height;
+    this.y = canvas.height + 100;
     this.radius = 50;
     this.speed = Math.random() * 5 + 1;
     this.distance;
+    this.counted = false;
+    this.sound = Math.random() <= 0.5 ? 'sound1' : 'sound2';
   }
   update(){
     this.y -= this.speed;
+    const dx = this.x - player.x;
+    const dy = this.y - player.y;
+    this.distance = Math.sqrt(dx*dx + dy*dy);
   }
   draw(){
     ctx.fillStyle = 'blue';
@@ -94,6 +103,11 @@ class Bubble {
   }
 }
 
+const bubblePop1 = document.createElement('audio');
+bubblePop1.src = 'resources/bubbles-single2.wav';
+const bubblePop2 = document.createElement('audio');
+bubblePop2.src = 'resources/bubbles-single1.wav';
+
 function createBubbles(){
   if(gameFrame % 50 == 0){
     bubblesArray.push(new Bubble());
@@ -101,6 +115,25 @@ function createBubbles(){
   for (let i = 0; i < bubblesArray.length; i++){
     bubblesArray[i].update();
     bubblesArray[i].draw();
+  }
+    for(let i = 0; i < bubblesArray.length; i++){
+      if(bubblesArray[i].y < -100) {
+        bubblesArray.splice(i, 1);
+      
+    }
+    // Detect collision distance between player and bubbles
+    if( bubblesArray[i].distance < bubblesArray[i].radius + player.radius) {
+      if(!bubblesArray[i].counted) {
+        if(bubblesArray[i].sound == 'sound1') {
+          bubblePop1.play();
+        } else {
+          bubblePop2.play();
+        }
+        score++;
+        bubblesArray[i].counted = true;
+        bubblesArray.splice(i, 1);
+      }
+    }
   }
 }
 
@@ -111,6 +144,8 @@ function animate(){
   createBubbles();
   player.update();
   player.draw();
+  ctx.fillStyle = 'black';
+  ctx.fillText('score: ' + score, 10, 50); 
   gameFrame++;
   console.log(gameFrame);
   // Creates an animation loop through recursion(Calling the function continuously)
